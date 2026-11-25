@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صيدلية برو - الإعدادات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    colors: { primary: '#0ea5e9', secondary: '#6366f1', accent: '#06b6d4', dark: '#0f172a', surface: '#1e293b' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar { transition: all 0.3s; width: 280px; }
+        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed .nav-text, .sidebar.collapsed .logo-text { display: none; }
+        .main-content { margin-right: 280px; transition: all 0.3s; }
+        .sidebar.collapsed + .main-content { margin-right: 80px; }
+        .toggle-switch { position: relative; width: 50px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #334155; border-radius: 26px; transition: 0.3s; }
+        .toggle-slider::before { content: ''; position: absolute; height: 20px; width: 20px; right: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
+        input:checked + .toggle-slider { background: #0ea5e9; }
+        input:checked + .toggle-slider::before { transform: translateX(-24px); }
+    </style>
+</head>
+<body>
+    <aside id="sidebar" class="sidebar fixed right-0 top-0 h-full bg-surface/95 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shrink-0">
+                <i class="fas fa-mortar-pestle text-xl text-white"></i>
+            </div>
+            <div class="logo-text">
+                <h1 class="text-xl font-black text-white">صيدلية <span class="text-primary">برو</span></h1>
+                <p class="text-xs text-gray-400">نظام ذكي متكامل</p>
+            </div>
+        </div>
+        <nav class="px-4 space-y-2 mt-4">
+            <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-chart-line w-5 text-center"></i><span class="nav-text">لوحة التحكم</span>
+            </a>
+            <a href="inventory.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-pills w-5 text-center"></i><span class="nav-text">المخزون</span>
+            </a>
+            <a href="sales.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-cash-register w-5 text-center"></i><span class="nav-text">نقطة البيع</span>
+            </a>
+            <a href="reports.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-file-alt w-5 text-center"></i><span class="nav-text">التقارير</span>
+            </a>
+            <a href="ai-assistant.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-robot w-5 text-center"></i><span class="nav-text">المساعد الذكي</span>
+            </a>
+            <a href="settings.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/20 text-primary border border-primary/30 font-bold">
+                <i class="fas fa-cog w-5 text-center"></i><span class="nav-text">الإعدادات</span>
+            </a>
+        </nav>
+        <div class="absolute bottom-0 right-0 left-0 p-4 border-t border-white/10">
+            <button onclick="app.logout()" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition text-sm font-semibold">
+                <i class="fas fa-sign-out-alt w-5 text-center"></i><span class="nav-text">تسجيل الخروج</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content p-6">
+        <header class="mb-8">
+            <h2 class="text-2xl font-black text-white">الإعدادات</h2>
+            <p class="text-gray-400 text-sm mt-1">تخصيص النظام حسب احتياجاتك</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Pharmacy Info -->
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-6"><i class="fas fa-store text-primary ml-2"></i>معلومات الصيدلية</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">اسم الصيدلية</label>
+                        <input type="text" value="صيدلية برو" class="input-field">
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">العنوان</label>
+                        <input type="text" value="الرياض، المملكة العربية السعودية" class="input-field">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-gray-400 text-sm block mb-2">الهاتف</label>
+                            <input type="text" value="+966501234567" class="input-field">
+                        </div>
+                        <div>
+                            <label class="text-gray-400 text-sm block mb-2">البريد الإلكتروني</label>
+                            <input type="email" value="info@pharmacypro.com" class="input-field">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">الرقم الضريبي</label>
+                        <input type="text" value="310123456700003" class="input-field">
+                    </div>
+                    <button onclick="app.showNotification('تم حفظ الإعدادات!', 'success')" class="btn-primary w-full py-3">حفظ التغييرات</button>
+                </div>
+            </div>
+
+            <!-- System Settings -->
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-6"><i class="fas fa-sliders-h text-primary ml-2"></i>إعدادات النظام</h3>
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white font-semibold">التنبيهات الصوتية</p>
+                            <p class="text-gray-500 text-sm">تشغيل صوت عند البيع والتنبيهات</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white font-semibold">التنبيه التلقائي للمخزون المنخفض</p>
+                            <p class="text-gray-500 text-sm">إشعار عند وصول المخزون للحد الأدنى</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white font-semibold">تنبيه انتهاء الصلاحية</p>
+                            <p class="text-gray-500 text-sm">إشعار قبل 3 أشهر من الانتهاء</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white font-semibold">الوضع الليلي</p>
+                            <p class="text-gray-500 text-sm">تفعيل الوضع الليلي تلقائياً</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax & Pricing -->
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-6"><i class="fas fa-percentage text-primary ml-2"></i>الضرائب والأسعار</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">نسبة الضريبة الافتراضية (%)</label>
+                        <input type="number" value="5" step="0.1" class="input-field">
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">العملة</label>
+                        <select class="input-field">
+                            <option>ريال سعودي (ر.س)</option>
+                            <option>دولار أمريكي ($)</option>
+                            <option>درهم إماراتي (د.إ)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">هامش الربح الافتراضي (%)</label>
+                        <input type="number" value="30" class="input-field">
+                    </div>
+                    <button onclick="app.showNotification('تم حفظ الإعدادات!', 'success')" class="btn-primary w-full py-3">حفظ التغييرات</button>
+                </div>
+            </div>
+
+            <!-- Print Settings -->
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-6"><i class="fas fa-print text-primary ml-2"></i>إعدادات الطباعة</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">حجم ورق الفواتير</label>
+                        <select class="input-field">
+                            <option>80mm (حراري)</option>
+                            <option>A4</option>
+                            <option>A5</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">تذييل الفاتورة</label>
+                        <textarea class="input-field" rows="3">شكراً لزيارتكم
+صيدلية برو - نتمنا لكم الشفاء العاجل</textarea>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" checked class="w-5 h-5 rounded accent-primary">
+                        <span class="text-gray-300">طباعة الباركود على الفاتورة</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" checked class="w-5 h-5 rounded accent-primary">
+                        <span class="text-gray-300">طباعة الرقم الضريبي</span>
+                    </div>
+                    <button onclick="app.showNotification('تم حفظ الإعدادات!', 'success')" class="btn-primary w-full py-3">حفظ التغييرات</button>
+                </div>
+            </div>
+
+            <!-- Users -->
+            <div class="glass p-6 lg:col-span-2">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-white"><i class="fas fa-users text-primary ml-2"></i>إدارة المستخدمين</h3>
+                    <button class="btn-primary flex items-center gap-2"><i class="fas fa-plus"></i> إضافة مستخدم</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>المستخدم</th><th>البريد</th><th>الدور</th><th>آخر دخول</th><th>الحالة</th><th>الإجراءات</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">م</div>
+                                    <span class="text-white font-semibold">مدير النظام</span>
+                                </td>
+                                <td class="text-gray-400">admin@pharmacypro.com</td>
+                                <td><span class="badge badge-danger">مدير</span></td>
+                                <td class="text-gray-400">2026-08-07 12:30</td>
+                                <td><span class="badge badge-success">نشط</span></td>
+                                <td>
+                                    <div class="flex gap-2">
+                                        <button class="w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center"><i class="fas fa-edit text-xs"></i></button>
+                                        <button class="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="glass p-6 lg:col-span-2 border border-red-500/20">
+                <h3 class="text-lg font-bold text-red-400 mb-4"><i class="fas fa-exclamation-triangle ml-2"></i>منطقة الخطر</h3>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white font-semibold">إعادة تعيين البيانات</p>
+                        <p class="text-gray-500 text-sm">سيتم حذف جميع البيانات وإعادة النظام للوضع الافتراضي</p>
+                    </div>
+                    <button onclick="if(confirm('هل أنت متأكد؟ سيتم حذف جميع البيانات!')){localStorage.clear();location.reload();}" class="btn-danger">
+                        <i class="fas fa-trash ml-2"></i> إعادة التعيين
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

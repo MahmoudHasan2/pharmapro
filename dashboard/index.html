@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صيدلية برو - لوحة التحكم</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    colors: { primary: '#0ea5e9', secondary: '#6366f1', accent: '#06b6d4', dark: '#0f172a', surface: '#1e293b' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar { transition: all 0.3s; width: 280px; }
+        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed .nav-text { display: none; }
+        .sidebar.collapsed .logo-text { display: none; }
+        .main-content { margin-right: 280px; transition: all 0.3s; }
+        .sidebar.collapsed + .main-content { margin-right: 80px; }
+        .stat-card { transition: all 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .progress-ring { transform: rotate(-90deg); }
+        .activity-item { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar fixed right-0 top-0 h-full bg-surface/95 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center animate-pulse-glow shrink-0">
+                <i class="fas fa-mortar-pestle text-xl text-white"></i>
+            </div>
+            <div class="logo-text">
+                <h1 class="text-xl font-black text-white">صيدلية <span class="text-primary">برو</span></h1>
+                <p class="text-xs text-gray-400">نظام ذكي متكامل</p>
+            </div>
+        </div>
+
+        <nav class="px-4 space-y-2 mt-4">
+            <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/20 text-primary border border-primary/30 font-bold">
+                <i class="fas fa-chart-line w-5 text-center"></i>
+                <span class="nav-text">لوحة التحكم</span>
+            </a>
+            <a href="inventory.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-pills w-5 text-center"></i>
+                <span class="nav-text">المخزون</span>
+            </a>
+            <a href="sales.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-cash-register w-5 text-center"></i>
+                <span class="nav-text">نقطة البيع</span>
+            </a>
+            <a href="reports.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-file-alt w-5 text-center"></i>
+                <span class="nav-text">التقارير</span>
+            </a>
+            <a href="ai-assistant.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-robot w-5 text-center"></i>
+                <span class="nav-text">المساعد الذكي</span>
+            </a>
+            <a href="settings.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-cog w-5 text-center"></i>
+                <span class="nav-text">الإعدادات</span>
+            </a>
+        </nav>
+
+        <div class="absolute bottom-0 right-0 left-0 p-4 border-t border-white/10">
+            <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold shrink-0">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="nav-text">
+                    <p class="text-white font-bold text-sm">مدير النظام</p>
+                    <p class="text-gray-400 text-xs">tap</p>
+                </div>
+            </div>
+            <button onclick="app.logout()" class="w-full mt-2 flex items-center gap-3 px-4 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition text-sm font-semibold">
+                <i class="fas fa-sign-out-alt w-5 text-center"></i>
+                <span class="nav-text">تسجيل الخروج</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content p-6">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-black text-white">لوحة التحكم</h2>
+                <p class="text-gray-400 text-sm mt-1" id="dateDisplay"></p>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="sidebarToggle" class="lg:hidden w-10 h-10 rounded-xl bg-surface border border-white/10 flex items-center justify-center text-white">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="glass px-4 py-2 rounded-xl flex items-center gap-2">
+                    <i class="fas fa-clock text-primary"></i>
+                    <span id="clock" class="text-white font-bold font-mono"></span>
+                </div>
+                <button class="relative w-10 h-10 rounded-xl bg-surface border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition" onclick="showAlerts()">
+                    <i class="fas fa-bell"></i>
+                    <span id="alertBadge" class="absolute -top-1 -left-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-bold">4</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="glass p-6 stat-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+                        <i class="fas fa-pills text-2xl text-primary"></i>
+                    </div>
+                    <span class="text-green-400 text-sm font-bold"><i class="fas fa-arrow-up ml-1"></i>12%</span>
+                </div>
+                <p class="text-gray-400 text-sm">إجمالي الأدوية</p>
+                <p class="text-3xl font-black text-white mt-1" id="totalMedicines">15</p>
+            </div>
+
+            <div class="glass p-6 stat-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500/30 to-green-500/10 flex items-center justify-center">
+                        <i class="fas fa-money-bill-wave text-2xl text-green-400"></i>
+                    </div>
+                    <span class="text-green-400 text-sm font-bold"><i class="fas fa-arrow-up ml-1"></i>8%</span>
+                </div>
+                <p class="text-gray-400 text-sm">إجمالي المبيعات</p>
+                <p class="text-3xl font-black text-white mt-1" id="totalSales">1,100.50 ر.س</p>
+            </div>
+
+            <div class="glass p-6 stat-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-500/30 to-yellow-500/10 flex items-center justify-center">
+                        <i class="fas fa-boxes text-2xl text-yellow-400"></i>
+                    </div>
+                    <span class="text-red-400 text-sm font-bold"><i class="fas fa-arrow-down ml-1"></i>3%</span>
+                </div>
+                <p class="text-gray-400 text-sm">قيمة المخزون</p>
+                <p class="text-3xl font-black text-white mt-1" id="stockValue">32,450 ر.س</p>
+            </div>
+
+            <div class="glass p-6 stat-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500/30 to-red-500/10 flex items-center justify-center">
+                        <i class="fas fa-exclamation-triangle text-2xl text-red-400"></i>
+                    </div>
+                    <span class="text-red-400 text-sm font-bold">تحذير</span>
+                </div>
+                <p class="text-gray-400 text-sm">تنبيهات المخزون</p>
+                <p class="text-3xl font-black text-white mt-1" id="lowStockCount">2</p>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="glass p-6 lg:col-span-2">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-white"><i class="fas fa-chart-bar text-primary ml-2"></i>المبيعات اليومية</h3>
+                    <select class="bg-surface border border-white/10 rounded-lg px-3 py-1 text-sm text-white">
+                        <option>آخر 7 أيام</option>
+                        <option>آخر 30 يوم</option>
+                        <option>هذا الشهر</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-6"><i class="fas fa-chart-pie text-primary ml-2"></i>توزيع المبيعات</h3>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="mt-4 space-y-2" id="categoryLegend"></div>
+            </div>
+        </div>
+
+        <!-- Alerts & Recent Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="glass p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-white"><i class="fas fa-bell text-red-400 ml-2"></i>التنبيهات</h3>
+                    <span class="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold">4 جديد</span>
+                </div>
+                <div class="space-y-3" id="alertsList"></div>
+            </div>
+
+            <div class="glass p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-bold text-white"><i class="fas fa-history text-primary ml-2"></i>آخر النشاطات</h3>
+                    <a href="sales.html" class="text-primary text-sm hover:underline">عرض الكل</a>
+                </div>
+                <div class="space-y-3" id="recentActivity"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Alerts Modal -->
+    <div id="alertsModal" class="modal-overlay" onclick="if(event.target===this)app.closeModal('alertsModal')">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-white">جميع التنبيهات</h3>
+                <button onclick="app.closeModal('alertsModal')" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div id="allAlerts" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Update stats
+        const data = getData();
+        document.getElementById('totalMedicines').textContent = data.medicines.length;
+        document.getElementById('totalSales').textContent = data.getTotalSalesValue().toFixed(2) + ' ر.س';
+        document.getElementById('stockValue').textContent = data.getTotalStockValue().toFixed(0) + ' ر.س';
+        document.getElementById('lowStockCount').textContent = data.getLowStock().length;
+
+        // Sales Chart
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: ['1 أغس', '2 أغس', '3 أغس', '4 أغس', '5 أغس', '6 أغس', '7 أغس'],
+                datasets: [{
+                    label: 'المبيعات (ر.س)',
+                    data: [104, 168, 162, 263, 279.5, 40, 0],
+                    borderColor: '#0ea5e9',
+                    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#0ea5e9',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                }
+            }
+        });
+
+        // Category Chart
+        const catCtx = document.getElementById('categoryChart').getContext('2d');
+        const catData = {};
+        data.sales.forEach(s => {
+            s.items.forEach(item => {
+                const med = data.medicines.find(m => m.name === item.name);
+                if (med) {
+                    catData[med.category] = (catData[med.category] || 0) + item.qty;
+                }
+            });
+        });
+
+        const colors = ['#0ea5e9', '#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        new Chart(catCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(catData),
+                datasets: [{
+                    data: Object.values(catData),
+                    backgroundColor: colors,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '65%'
+            }
+        });
+
+        // Category Legend
+        const legendEl = document.getElementById('categoryLegend');
+        Object.keys(catData).forEach((cat, i) => {
+            legendEl.innerHTML += `
+                <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full" style="background:${colors[i % colors.length]}"></div>
+                        <span class="text-gray-300">${cat}</span>
+                    </div>
+                    <span class="text-white font-bold">${catData[cat]}</span>
+                </div>`;
+        });
+
+        // Alerts
+        const alertsList = document.getElementById('alertsList');
+        data.alerts.slice(0, 4).forEach(alert => {
+            const icon = alert.type === 'stock' ? 'fa-box' : 'fa-calendar-times';
+            const color = alert.priority === 'high' ? 'text-red-400' : 'text-yellow-400';
+            alertsList.innerHTML += `
+                <div class="flex items-start gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition activity-item">
+                    <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                        <i class="fas ${icon} ${color}"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-white text-sm font-semibold">${alert.message}</p>
+                        <p class="text-gray-500 text-xs mt-1">${alert.date}</p>
+                    </div>
+                    <span class="badge ${alert.priority === 'high' ? 'badge-danger' : 'badge-warning'}">${alert.priority === 'high' ? 'عاجل' : 'متوسط'}</span>
+                </div>`;
+        });
+
+        // Recent Activity
+        const recentEl = document.getElementById('recentActivity');
+        data.sales.slice(-5).reverse().forEach(sale => {
+            recentEl.innerHTML += `
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition activity-item">
+                    <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                        <i class="fas fa-shopping-cart text-primary"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-white text-sm font-semibold">فاتورة #${sale.id} - ${sale.customer}</p>
+                        <p class="text-gray-500 text-xs mt-1">${sale.date} · ${sale.items.length} أصناف</p>
+                    </div>
+                    <span class="text-primary font-bold">${sale.total.toFixed(2)} ر.س</span>
+                </div>`;
+        });
+
+        // All Alerts Modal
+        function showAlerts() {
+            const allAlerts = document.getElementById('allAlerts');
+            allAlerts.innerHTML = '';
+            data.alerts.forEach(alert => {
+                const icon = alert.type === 'stock' ? 'fa-box' : 'fa-calendar-times';
+                allAlerts.innerHTML += `
+                    <div class="flex items-start gap-3 p-4 rounded-xl bg-white/5">
+                        <div class="w-10 h-10 rounded-lg ${alert.priority === 'high' ? 'bg-red-500/10' : 'bg-yellow-500/10'} flex items-center justify-center shrink-0">
+                            <i class="fas ${icon} ${alert.priority === 'high' ? 'text-red-400' : 'text-yellow-400'}"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-white font-semibold">${alert.message}</p>
+                            <p class="text-gray-500 text-sm mt-1">${alert.date}</p>
+                        </div>
+                    </div>`;
+            });
+            app.openModal('alertsModal');
+        }
+    </script>
+</body>
+</html>

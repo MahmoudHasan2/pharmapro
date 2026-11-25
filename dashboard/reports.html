@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صيدلية برو - التقارير</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    colors: { primary: '#0ea5e9', secondary: '#6366f1', accent: '#06b6d4', dark: '#0f172a', surface: '#1e293b' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar { transition: all 0.3s; width: 280px; }
+        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed .nav-text, .sidebar.collapsed .logo-text { display: none; }
+        .main-content { margin-right: 280px; transition: all 0.3s; }
+        .sidebar.collapsed + .main-content { margin-right: 80px; }
+        .report-card { transition: all 0.3s; }
+        .report-card:hover { transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+    <aside id="sidebar" class="sidebar fixed right-0 top-0 h-full bg-surface/95 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shrink-0">
+                <i class="fas fa-mortar-pestle text-xl text-white"></i>
+            </div>
+            <div class="logo-text">
+                <h1 class="text-xl font-black text-white">صيدلية <span class="text-primary">برو</span></h1>
+                <p class="text-xs text-gray-400">نظام ذكي متكامل</p>
+            </div>
+        </div>
+        <nav class="px-4 space-y-2 mt-4">
+            <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-chart-line w-5 text-center"></i><span class="nav-text">لوحة التحكم</span>
+            </a>
+            <a href="inventory.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-pills w-5 text-center"></i><span class="nav-text">المخزون</span>
+            </a>
+            <a href="sales.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-cash-register w-5 text-center"></i><span class="nav-text">نقطة البيع</span>
+            </a>
+            <a href="reports.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/20 text-primary border border-primary/30 font-bold">
+                <i class="fas fa-file-alt w-5 text-center"></i><span class="nav-text">التقارير</span>
+            </a>
+            <a href="ai-assistant.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-robot w-5 text-center"></i><span class="nav-text">المساعد الذكي</span>
+            </a>
+            <a href="settings.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-cog w-5 text-center"></i><span class="nav-text">الإعدادات</span>
+            </a>
+        </nav>
+        <div class="absolute bottom-0 right-0 left-0 p-4 border-t border-white/10">
+            <button onclick="app.logout()" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition text-sm font-semibold">
+                <i class="fas fa-sign-out-alt w-5 text-center"></i><span class="nav-text">تسجيل الخروج</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content p-6">
+        <header class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-black text-white">التقارير والإحصائيات</h2>
+                <p class="text-gray-400 text-sm mt-1">تحليلات شاملة لأداء الصيدلية</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="exportReport()" class="btn-primary flex items-center gap-2">
+                    <i class="fas fa-file-export"></i> تصدير PDF
+                </button>
+                <button onclick="window.print()" class="glass px-4 py-2.5 rounded-xl text-white hover:bg-white/10 transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> طباعة
+                </button>
+            </div>
+        </header>
+
+        <!-- Report Tabs -->
+        <div class="glass p-2 mb-6 flex gap-2 overflow-x-auto">
+            <button onclick="showReport('sales')" id="tab-sales" class="px-6 py-2 rounded-xl bg-primary text-white font-bold transition">المبيعات</button>
+            <button onclick="showReport('inventory')" id="tab-inventory" class="px-6 py-2 rounded-xl text-gray-400 hover:bg-white/5 transition font-semibold">المخزون</button>
+            <button onclick="showReport('financial')" id="tab-financial" class="px-6 py-2 rounded-xl text-gray-400 hover:bg-white/5 transition font-semibold">المالية</button>
+            <button onclick="showReport('expiry')" id="tab-expiry" class="px-6 py-2 rounded-xl text-gray-400 hover:bg-white/5 transition font-semibold">الصلاحية</button>
+        </div>
+
+        <!-- Sales Report -->
+        <div id="report-sales" class="space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass p-6">
+                    <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-chart-line text-primary ml-2"></i>المبيعات الشهرية</h3>
+                    <div class="chart-container"><canvas id="monthlySalesChart"></canvas></div>
+                </div>
+                <div class="glass p-6">
+                    <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-chart-bar text-primary ml-2"></i>أفضل الأدوية مبيعاً</h3>
+                    <div class="chart-container"><canvas id="topProductsChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-list text-primary ml-2"></i>سجل المبيعات</h3>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>رقم الفاتورة</th><th>التاريخ</th><th>العميل</th><th>الأصناف</th><th>الإجمالي</th><th>الضريبة</th><th>طريقة الدفع</th></tr>
+                        </thead>
+                        <tbody id="salesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Report -->
+        <div id="report-inventory" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="glass p-6">
+                    <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-chart-pie text-primary ml-2"></i>توزيع المخزون حسب الفئة</h3>
+                    <div class="chart-container" style="height: 300px;"><canvas id="inventoryCategoryChart"></canvas></div>
+                </div>
+                <div class="glass p-6">
+                    <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-exclamation-triangle text-red-400 ml-2"></i>الأدوية منخفضة المخزون</h3>
+                    <div id="lowStockReport" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Report -->
+        <div id="report-financial" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass p-6 report-card">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-green-500/20 flex items-center justify-center"><i class="fas fa-arrow-up text-2xl text-green-400"></i></div>
+                        <div><p class="text-gray-400 text-sm">إجمالي الإيرادات</p><p class="text-2xl font-black text-white" id="totalRevenue">0</p></div>
+                    </div>
+                </div>
+                <div class="glass p-6 report-card">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-red-500/20 flex items-center justify-center"><i class="fas fa-arrow-down text-2xl text-red-400"></i></div>
+                        <div><p class="text-gray-400 text-sm">إجمالي المصروفات</p><p class="text-2xl font-black text-white" id="totalExpenses">0</p></div>
+                    </div>
+                </div>
+                <div class="glass p-6 report-card">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center"><i class="fas fa-balance-scale text-2xl text-primary"></i></div>
+                        <div><p class="text-gray-400 text-sm">صافي الربح</p><p class="text-2xl font-black text-white" id="netProfit">0</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-chart-area text-primary ml-2"></i>الأداء المالي</h3>
+                <div class="chart-container"><canvas id="financialChart"></canvas></div>
+            </div>
+
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-file-invoice-dollar text-primary ml-2"></i>تقرير الضرائب</h3>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>الفترة</th><th>إجمالي المبيعات</th><th>الضريبة (5%)</th><th>عدد الفواتير</th></tr>
+                        </thead>
+                        <tbody id="taxReportTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiry Report -->
+        <div id="report-expiry" class="space-y-6 hidden">
+            <div class="glass p-6">
+                <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-calendar-times text-red-400 ml-2"></i>الأدوية القريبة من الانتهاء</h3>
+                <div class="overflow-x-auto">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>الدواء</th><th>الباركود</th><th>تاريخ الانتهاء</th><th>الأيام المتبقية</th><th>المخزون</th><th>الحالة</th></tr>
+                        </thead>
+                        <tbody id="expiryTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentReport = 'sales';
+
+        function showReport(type) {
+            document.querySelectorAll('[id^="report-"]').forEach(el => el.classList.add('hidden'));
+            document.getElementById('report-' + type).classList.remove('hidden');
+
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.classList.remove('bg-primary', 'text-white');
+                el.classList.add('text-gray-400');
+            });
+            document.getElementById('tab-' + type).classList.add('bg-primary', 'text-white');
+            document.getElementById('tab-' + type).classList.remove('text-gray-400');
+
+            currentReport = type;
+            if (type === 'sales') initSalesReport();
+            if (type === 'inventory') initInventoryReport();
+            if (type === 'financial') initFinancialReport();
+            if (type === 'expiry') initExpiryReport();
+        }
+
+        function initSalesReport() {
+            const data = getData();
+
+            // Monthly Sales Chart
+            const monthlyCtx = document.getElementById('monthlySalesChart').getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس'],
+                    datasets: [{
+                        label: 'المبيعات',
+                        data: [8500, 9200, 7800, 10500, 11200, 9800, 12500, data.getTotalSalesValue()],
+                        backgroundColor: 'rgba(14, 165, 233, 0.6)',
+                        borderColor: '#0ea5e9',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            // Top Products
+            const productSales = {};
+            data.sales.forEach(s => {
+                s.items.forEach(i => {
+                    productSales[i.name] = (productSales[i.name] || 0) + i.qty;
+                });
+            });
+            const sorted = Object.entries(productSales).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+            const topCtx = document.getElementById('topProductsChart').getContext('2d');
+            new Chart(topCtx, {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(s => s[0].split(' ')[0]),
+                    datasets: [{
+                        label: 'الكمية المباعة',
+                        data: sorted.map(s => s[1]),
+                        backgroundColor: ['#0ea5e9', '#6366f1', '#06b6d4', '#10b981', '#f59e0b'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            // Sales Table
+            const tbody = document.getElementById('salesTable');
+            tbody.innerHTML = '';
+            data.sales.slice().reverse().forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="text-primary font-bold">#${s.id}</td>
+                        <td class="text-gray-400">${s.date}</td>
+                        <td class="text-white">${s.customer}</td>
+                        <td class="text-gray-400">${s.items.length}</td>
+                        <td class="text-white font-bold">${s.total.toFixed(2)} ر.س</td>
+                        <td class="text-gray-400">${s.tax.toFixed(2)}</td>
+                        <td><span class="badge badge-info">${s.payment}</span></td>
+                    </tr>`;
+            });
+        }
+
+        function initInventoryReport() {
+            const data = getData();
+
+            // Category Chart
+            const catData = {};
+            data.medicines.forEach(m => {
+                catData[m.category] = (catData[m.category] || 0) + m.stock;
+            });
+
+            const invCtx = document.getElementById('inventoryCategoryChart').getContext('2d');
+            new Chart(invCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(catData),
+                    datasets: [{
+                        data: Object.values(catData),
+                        backgroundColor: ['#0ea5e9', '#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '60%' }
+            });
+
+            // Low Stock
+            const lowStockEl = document.getElementById('lowStockReport');
+            lowStockEl.innerHTML = '';
+            data.getLowStock().forEach(m => {
+                const percent = (m.stock / m.minStock) * 100;
+                lowStockEl.innerHTML += `
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                        <div class="flex-1">
+                            <p class="text-white font-semibold">${m.name}</p>
+                            <div class="w-full bg-gray-700 rounded-full h-2 mt-2">
+                                <div class="bg-red-400 h-2 rounded-full transition-all" style="width: ${Math.min(percent, 100)}%"></div>
+                            </div>
+                        </div>
+                        <span class="text-red-400 font-bold">${m.stock}/${m.minStock}</span>
+                    </div>`;
+            });
+        }
+
+        function initFinancialReport() {
+            const data = getData();
+            const revenue = data.getTotalSalesValue();
+            const expenses = data.expenses.reduce((s, e) => s + e.amount, 0);
+            const profit = revenue - expenses;
+
+            document.getElementById('totalRevenue').textContent = revenue.toFixed(2) + ' ر.س';
+            document.getElementById('totalExpenses').textContent = expenses.toFixed(2) + ' ر.س';
+            document.getElementById('netProfit').textContent = profit.toFixed(2) + ' ر.س';
+
+            // Financial Chart
+            const finCtx = document.getElementById('financialChart').getContext('2d');
+            new Chart(finCtx, {
+                type: 'line',
+                data: {
+                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس'],
+                    datasets: [
+                        { label: 'الإيرادات', data: [8500, 9200, 7800, 10500, 11200, 9800, 12500, revenue], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 },
+                        { label: 'المصروفات', data: [5000, 5200, 4800, 5500, 5800, 5100, 6200, expenses], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            // Tax Report
+            const taxBody = document.getElementById('taxReportTable');
+            taxBody.innerHTML = `
+                <tr>
+                    <td class="text-white">أغسطس 2026</td>
+                    <td class="text-white font-bold">${revenue.toFixed(2)} ر.س</td>
+                    <td class="text-primary font-bold">${data.getTotalTax().toFixed(2)} ر.س</td>
+                    <td class="text-gray-400">${data.sales.length}</td>
+                </tr>`;
+        }
+
+        function initExpiryReport() {
+            const data = getData();
+            const now = new Date();
+            const tbody = document.getElementById('expiryTable');
+            tbody.innerHTML = '';
+
+            data.medicines.forEach(m => {
+                const expiry = new Date(m.expiry);
+                const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+                if (daysLeft < 180) {
+                    const status = daysLeft < 30 ? 'badge-danger' : daysLeft < 90 ? 'badge-warning' : 'badge-info';
+                    const statusText = daysLeft < 30 ? 'حرج' : daysLeft < 90 ? 'قريب' : 'متوسط';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="text-white font-semibold">${m.name}</td>
+                            <td class="text-gray-400 font-mono">${m.barcode}</td>
+                            <td class="text-gray-400">${m.expiry}</td>
+                            <td class="${daysLeft < 30 ? 'text-red-400' : 'text-yellow-400'} font-bold">${daysLeft} يوم</td>
+                            <td class="text-white">${m.stock}</td>
+                            <td><span class="badge ${status}">${statusText}</span></td>
+                        </tr>`;
+                }
+            });
+        }
+
+        function exportReport() {
+            app.showNotification('جاري إنشاء التقرير...', 'info');
+            setTimeout(() => {
+                const data = getData();
+                let content = `تقرير صيدلية برو - ${new Date().toLocaleDateString('ar-SA')}\n\n`;
+                content += `إجمالي المبيعات: ${data.getTotalSalesValue().toFixed(2)} ر.س\n`;
+                content += `إجمالي الضرائب: ${data.getTotalTax().toFixed(2)} ر.س\n`;
+                content += `عدد الأدوية: ${data.medicines.length}\n`;
+                content += `عدد الفواتير: ${data.sales.length}\n`;
+
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'report_' + new Date().toISOString().split('T')[0] + '.txt';
+                link.click();
+                app.showNotification('تم تصدير التقرير!', 'success');
+            }, 1000);
+        }
+
+        initSalesReport();
+    </script>
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صيدلية برو - نقطة البيع</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    colors: { primary: '#0ea5e9', secondary: '#6366f1', accent: '#06b6d4', dark: '#0f172a', surface: '#1e293b' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar { transition: all 0.3s; width: 280px; }
+        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed .nav-text, .sidebar.collapsed .logo-text { display: none; }
+        .main-content { margin-right: 280px; transition: all 0.3s; }
+        .sidebar.collapsed + .main-content { margin-right: 80px; }
+        .cart-item { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .medicine-card { transition: all 0.2s; }
+        .medicine-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2); }
+        .receipt { font-family: 'Courier New', monospace; }
+    </style>
+</head>
+<body>
+    <aside id="sidebar" class="sidebar fixed right-0 top-0 h-full bg-surface/95 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shrink-0">
+                <i class="fas fa-mortar-pestle text-xl text-white"></i>
+            </div>
+            <div class="logo-text">
+                <h1 class="text-xl font-black text-white">صيدلية <span class="text-primary">برو</span></h1>
+                <p class="text-xs text-gray-400">نظام ذكي متكامل</p>
+            </div>
+        </div>
+        <nav class="px-4 space-y-2 mt-4">
+            <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-chart-line w-5 text-center"></i><span class="nav-text">لوحة التحكم</span>
+            </a>
+            <a href="inventory.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-pills w-5 text-center"></i><span class="nav-text">المخزون</span>
+            </a>
+            <a href="sales.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/20 text-primary border border-primary/30 font-bold">
+                <i class="fas fa-cash-register w-5 text-center"></i><span class="nav-text">نقطة البيع</span>
+            </a>
+            <a href="reports.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-file-alt w-5 text-center"></i><span class="nav-text">التقارير</span>
+            </a>
+            <a href="ai-assistant.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-robot w-5 text-center"></i><span class="nav-text">المساعد الذكي</span>
+            </a>
+            <a href="settings.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-cog w-5 text-center"></i><span class="nav-text">الإعدادات</span>
+            </a>
+        </nav>
+        <div class="absolute bottom-0 right-0 left-0 p-4 border-t border-white/10">
+            <button onclick="app.logout()" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition text-sm font-semibold">
+                <i class="fas fa-sign-out-alt w-5 text-center"></i><span class="nav-text">تسجيل الخروج</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content p-6">
+        <header class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-black text-white">نقطة البيع</h2>
+                <p class="text-gray-400 text-sm mt-1">إنشاء فاتورة جديدة</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="clearCart()" class="glass px-4 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 transition flex items-center gap-2">
+                    <i class="fas fa-trash"></i> إفراغ
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Products -->
+            <div class="lg:col-span-2 space-y-4">
+                <div class="glass p-4 flex flex-wrap items-center gap-4">
+                    <div class="flex-1 min-w-[200px] relative">
+                        <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="productSearch" placeholder="بحث عن دواء أو مسح باركود..." 
+                            class="input-field pr-12" onkeyup="searchProducts()">
+                    </div>
+                    <button onclick="scanBarcodePOS()" class="btn-success flex items-center gap-2">
+                        <i class="fas fa-barcode"></i> مسح باركود
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4" id="productsGrid"></div>
+            </div>
+
+            <!-- Cart -->
+            <div class="lg:col-span-1">
+                <div class="glass p-6 sticky top-6">
+                    <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-shopping-cart text-primary ml-2"></i>الفاتورة</h3>
+
+                    <div class="space-y-3 max-h-[400px] overflow-y-auto mb-4" id="cartItems"></div>
+
+                    <div class="border-t border-white/10 pt-4 space-y-2">
+                        <div class="flex justify-between text-gray-400">
+                            <span>المجموع الفرعي</span>
+                            <span id="subtotal" class="text-white">0.00 ر.س</span>
+                        </div>
+                        <div class="flex justify-between text-gray-400">
+                            <span>الضريبة (5%)</span>
+                            <span id="taxAmount" class="text-white">0.00 ر.س</span>
+                        </div>
+                        <div class="flex justify-between text-xl font-black text-white border-t border-white/10 pt-2">
+                            <span>الإجمالي</span>
+                            <span id="grandTotal" class="text-primary">0.00 ر.س</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 space-y-3">
+                        <input type="text" id="customerName" placeholder="اسم العميل (اختياري)" class="input-field">
+                        <select id="paymentMethod" class="input-field">
+                            <option value="نقدي">نقدي</option>
+                            <option value="بطاقة">بطاقة</option>
+                            <option value="تحويل">تحويل بنكي</option>
+                        </select>
+                        <button onclick="checkout()" class="btn-primary w-full py-3 text-lg flex items-center justify-center gap-2">
+                            <i class="fas fa-check-circle"></i> إتمام البيع
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Receipt Modal -->
+    <div id="receiptModal" class="modal-overlay" onclick="if(event.target===this)app.closeModal('receiptModal')">
+        <div class="modal-content" style="max-width: 400px;">
+            <div id="receiptContent" class="receipt bg-white text-black p-6 rounded-lg"></div>
+            <div class="flex gap-3 mt-4 no-print">
+                <button onclick="printReceipt()" class="btn-primary flex-1 py-3"><i class="fas fa-print ml-2"></i> طباعة</button>
+                <button onclick="app.closeModal('receiptModal')" class="glass flex-1 py-3 text-white"><i class="fas fa-times ml-2"></i> إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let cart = [];
+
+        function init() {
+            renderProducts();
+            // Barcode scanner
+            let buffer = '';
+            let timeout;
+            document.addEventListener('keydown', (e) => {
+                if (timeout) clearTimeout(timeout);
+                if (e.key === 'Enter' && buffer.length > 5) {
+                    addByBarcode(buffer);
+                    buffer = '';
+                } else if (e.key.length === 1) {
+                    buffer += e.key;
+                }
+                timeout = setTimeout(() => buffer = '', 100);
+            });
+        }
+
+        function renderProducts() {
+            const data = getData();
+            const grid = document.getElementById('productsGrid');
+            grid.innerHTML = '';
+
+            data.medicines.forEach((m, i) => {
+                const isLow = m.stock <= m.minStock;
+                grid.innerHTML += `
+                    <div class="medicine-card glass p-4 rounded-xl cursor-pointer ${isLow ? 'opacity-60' : ''}" onclick="addToCart(${m.id})" style="animation: fadeIn 0.3s ease-out ${i * 0.03}s both">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs text-gray-500 font-mono">${m.barcode}</span>
+                            ${isLow ? '<span class="badge badge-danger text-xs">منخفض</span>' : ''}
+                        </div>
+                        <h4 class="text-white font-bold text-sm mb-1 line-clamp-2">${m.name}</h4>
+                        <p class="text-gray-400 text-xs mb-2">${m.category}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-primary font-bold">${m.price.toFixed(2)} ر.س</span>
+                            <span class="text-gray-500 text-xs">متوفر: ${m.stock}</span>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function searchProducts() {
+            const search = document.getElementById('productSearch').value.toLowerCase();
+            const cards = document.querySelectorAll('.medicine-card');
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(search) ? 'block' : 'none';
+            });
+        }
+
+        function scanBarcodePOS() {
+            const code = prompt('أدخل رقم الباركود:');
+            if (code) addByBarcode(code);
+        }
+
+        function addByBarcode(barcode) {
+            const data = getData();
+            const med = data.medicines.find(m => m.barcode === barcode);
+            if (med) {
+                addToCart(med.id);
+                app.showNotification(`تم إضافة: ${med.name}`, 'success');
+            } else {
+                app.showNotification('الدواء غير موجود!', 'error');
+            }
+        }
+
+        function addToCart(medId) {
+            const data = getData();
+            const med = data.medicines.find(m => m.id === medId);
+            if (!med || med.stock <= 0) {
+                app.showNotification('الدواء غير متوفر!', 'error');
+                return;
+            }
+
+            const existing = cart.find(c => c.id === medId);
+            if (existing) {
+                if (existing.qty >= med.stock) {
+                    app.showNotification('الكمية المتاحة غير كافية!', 'error');
+                    return;
+                }
+                existing.qty++;
+            } else {
+                cart.push({ id: med.id, name: med.name, price: med.price, tax: med.tax, qty: 1 });
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            container.innerHTML = '';
+
+            let subtotal = 0;
+            let taxTotal = 0;
+
+            cart.forEach((item, i) => {
+                const itemTotal = item.price * item.qty;
+                const itemTax = itemTotal * item.tax;
+                subtotal += itemTotal;
+                taxTotal += itemTax;
+
+                container.innerHTML += `
+                    <div class="cart-item flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                        <div class="flex-1">
+                            <p class="text-white font-semibold text-sm">${item.name}</p>
+                            <p class="text-gray-500 text-xs">${item.price.toFixed(2)} × ${item.qty}</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateQty(${i}, -1)" class="w-7 h-7 rounded-lg bg-white/10 text-white hover:bg-white/20 flex items-center justify-center"><i class="fas fa-minus text-xs"></i></button>
+                            <span class="text-white font-bold w-6 text-center">${item.qty}</span>
+                            <button onclick="updateQty(${i}, 1)" class="w-7 h-7 rounded-lg bg-white/10 text-white hover:bg-white/20 flex items-center justify-center"><i class="fas fa-plus text-xs"></i></button>
+                        </div>
+                        <button onclick="removeFromCart(${i})" class="text-red-400 hover:text-red-300"><i class="fas fa-times"></i></button>
+                    </div>`;
+            });
+
+            if (cart.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 py-8"><i class="fas fa-shopping-cart text-4xl mb-2 opacity-30"></i><p>السلة فارغة</p></div>';
+            }
+
+            document.getElementById('subtotal').textContent = subtotal.toFixed(2) + ' ر.س';
+            document.getElementById('taxAmount').textContent = taxTotal.toFixed(2) + ' ر.س';
+            document.getElementById('grandTotal').textContent = (subtotal + taxTotal).toFixed(2) + ' ر.س';
+        }
+
+        function updateQty(index, delta) {
+            const data = getData();
+            const item = cart[index];
+            const med = data.medicines.find(m => m.id === item.id);
+
+            if (delta > 0 && item.qty >= med.stock) {
+                app.showNotification('الكمية المتاحة غير كافية!', 'error');
+                return;
+            }
+
+            item.qty += delta;
+            if (item.qty <= 0) cart.splice(index, 1);
+            renderCart();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function clearCart() {
+            if (cart.length === 0) return;
+            if (!confirm('هل تريد إفراغ السلة؟')) return;
+            cart = [];
+            renderCart();
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                app.showNotification('السلة فارغة!', 'error');
+                return;
+            }
+
+            const data = getData();
+            const customer = document.getElementById('customerName').value || 'عميل نقدي';
+            const payment = document.getElementById('paymentMethod').value;
+
+            let subtotal = 0;
+            let taxTotal = 0;
+            const items = [];
+
+            cart.forEach(item => {
+                const itemTotal = item.price * item.qty;
+                const itemTax = itemTotal * item.tax;
+                subtotal += itemTotal;
+                taxTotal += itemTax;
+                items.push({ name: item.name, qty: item.qty, price: item.price });
+
+                // Update stock
+                const med = data.medicines.find(m => m.id === item.id);
+                if (med) med.stock -= item.qty;
+            });
+
+            const sale = {
+                id: data.sales.length + 1,
+                date: new Date().toISOString().split('T')[0],
+                items: items,
+                total: subtotal + taxTotal,
+                tax: taxTotal,
+                customer: customer,
+                payment: payment
+            };
+
+            data.sales.push(sale);
+            saveData(data);
+
+            showReceipt(sale);
+            cart = [];
+            renderCart();
+            renderProducts();
+            document.getElementById('customerName').value = '';
+        }
+
+        function showReceipt(sale) {
+            const now = new Date();
+            const receiptHTML = `
+                <div class="text-center mb-4">
+                    <h2 class="text-xl font-bold">صيدلية برو</h2>
+                    <p class="text-sm">فاتورة ضريبية مبسطة</p>
+                    <p class="text-xs text-gray-600">${now.toLocaleString('ar-SA')}</p>
+                </div>
+                <div class="border-t border-b border-gray-300 py-2 mb-2">
+                    <p class="text-sm">رقم الفاتورة: #${sale.id}</p>
+                    <p class="text-sm">العميل: ${sale.customer}</p>
+                    <p class="text-sm">طريقة الدفع: ${sale.payment}</p>
+                </div>
+                <table class="w-full text-sm mb-2">
+                    <thead><tr class="border-b"><th class="text-right">الصنف</th><th>الكمية</th><th class="text-left">السعر</th></tr></thead>
+                    <tbody>
+                        ${sale.items.map(i => `<tr><td class="text-right">${i.name}</td><td class="text-center">${i.qty}</td><td class="text-left">${(i.price * i.qty).toFixed(2)}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+                <div class="border-t border-gray-300 pt-2">
+                    <div class="flex justify-between"><span>المجموع:</span><span>${(sale.total - sale.tax).toFixed(2)}</span></div>
+                    <div class="flex justify-between"><span>الضريبة (5%):</span><span>${sale.tax.toFixed(2)}</span></div>
+                    <div class="flex justify-between font-bold text-lg border-t border-gray-300 mt-1 pt-1">
+                        <span>الإجمالي:</span><span>${sale.total.toFixed(2)} ر.س</span>
+                    </div>
+                </div>
+                <div class="text-center mt-4 text-xs text-gray-500">
+                    <p>شكراً لزيارتكم</p>
+                    <p>صيدلية برو - نظام إدارة متكامل</p>
+                </div>
+            `;
+
+            document.getElementById('receiptContent').innerHTML = receiptHTML;
+            app.openModal('receiptModal');
+        }
+
+        function printReceipt() {
+            const content = document.getElementById('receiptContent').innerHTML;
+            const win = window.open('', '_blank');
+            win.document.write(`<html><head><title>فاتورة</title><style>body{font-family:Arial;width:80mm;margin:0;padding:10px}table{width:100%}th,td{padding:3px}</style></head><body>${content}</body></html>`);
+            win.document.close();
+            win.print();
+        }
+
+        init();
+    </script>
+</body>
+</html>

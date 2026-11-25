@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صيدلية برو - المخزون</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Cairo', 'sans-serif'] },
+                    colors: { primary: '#0ea5e9', secondary: '#6366f1', accent: '#06b6d4', dark: '#0f172a', surface: '#1e293b' }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar { transition: all 0.3s; width: 280px; }
+        .sidebar.collapsed { width: 80px; }
+        .sidebar.collapsed .nav-text, .sidebar.collapsed .logo-text { display: none; }
+        .main-content { margin-right: 280px; transition: all 0.3s; }
+        .sidebar.collapsed + .main-content { margin-right: 80px; }
+    </style>
+</head>
+<body>
+    <aside id="sidebar" class="sidebar fixed right-0 top-0 h-full bg-surface/95 backdrop-blur-xl border-l border-white/10 z-50 overflow-y-auto">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shrink-0">
+                <i class="fas fa-mortar-pestle text-xl text-white"></i>
+            </div>
+            <div class="logo-text">
+                <h1 class="text-xl font-black text-white">صيدلية <span class="text-primary">برو</span></h1>
+                <p class="text-xs text-gray-400">نظام ذكي متكامل</p>
+            </div>
+        </div>
+        <nav class="px-4 space-y-2 mt-4">
+            <a href="index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-chart-line w-5 text-center"></i><span class="nav-text">لوحة التحكم</span>
+            </a>
+            <a href="inventory.html" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/20 text-primary border border-primary/30 font-bold">
+                <i class="fas fa-pills w-5 text-center"></i><span class="nav-text">المخزون</span>
+            </a>
+            <a href="sales.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-cash-register w-5 text-center"></i><span class="nav-text">نقطة البيع</span>
+            </a>
+            <a href="reports.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-file-alt w-5 text-center"></i><span class="nav-text">التقارير</span>
+            </a>
+            <a href="ai-assistant.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-robot w-5 text-center"></i><span class="nav-text">المساعد الذكي</span>
+            </a>
+            <a href="settings.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition font-semibold">
+                <i class="fas fa-cog w-5 text-center"></i><span class="nav-text">الإعدادات</span>
+            </a>
+        </nav>
+        <div class="absolute bottom-0 right-0 left-0 p-4 border-t border-white/10">
+            <button onclick="app.logout()" class="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-red-400 hover:bg-red-500/10 transition text-sm font-semibold">
+                <i class="fas fa-sign-out-alt w-5 text-center"></i><span class="nav-text">تسجيل الخروج</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content p-6">
+        <header class="flex items-center justify-between mb-8">
+            <div>
+                <h2 class="text-2xl font-black text-white">إدارة المخزون</h2>
+                <p class="text-gray-400 text-sm mt-1">إدارة الأدوية والمستلزمات الطبية</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="app.openModal('addMedicineModal')" class="btn-primary flex items-center gap-2">
+                    <i class="fas fa-plus"></i> إضافة دواء
+                </button>
+                <button onclick="exportInventory()" class="glass px-4 py-2.5 rounded-xl text-white hover:bg-white/10 transition flex items-center gap-2">
+                    <i class="fas fa-file-export"></i> تصدير
+                </button>
+            </div>
+        </header>
+
+        <!-- Filters -->
+        <div class="glass p-4 mb-6 flex flex-wrap items-center gap-4">
+            <div class="flex-1 min-w-[200px] relative">
+                <i class="fas fa-search absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="searchInput" placeholder="بحث عن دواء..." 
+                    class="input-field pr-12" onkeyup="filterMedicines()">
+            </div>
+            <select id="categoryFilter" class="input-field w-48" onchange="filterMedicines()">
+                <option value="">جميع الفئات</option>
+            </select>
+            <select id="stockFilter" class="input-field w-40" onchange="filterMedicines()">
+                <option value="">جميع المخزونات</option>
+                <option value="low">منخفض</option>
+                <option value="normal">طبيعي</option>
+            </select>
+            <button onclick="scanBarcode()" class="btn-success flex items-center gap-2">
+                <i class="fas fa-barcode"></i> مسح باركود
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="glass overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الباركود</th>
+                            <th>اسم الدواء</th>
+                            <th>الفئة</th>
+                            <th>السعر</th>
+                            <th>التكلفة</th>
+                            <th>المخزون</th>
+                            <th>الحد الأدنى</th>
+                            <th>الصلاحية</th>
+                            <th>المورد</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medicinesTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between mt-4">
+            <p class="text-gray-400 text-sm" id="showingInfo"></p>
+            <div class="flex gap-2">
+                <button onclick="changePage(-1)" class="w-10 h-10 rounded-xl glass flex items-center justify-center text-white hover:bg-white/10"><i class="fas fa-chevron-right"></i></button>
+                <span id="pageInfo" class="flex items-center px-4 text-white font-bold"></span>
+                <button onclick="changePage(1)" class="w-10 h-10 rounded-xl glass flex items-center justify-center text-white hover:bg-white/10"><i class="fas fa-chevron-left"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Medicine Modal -->
+    <div id="addMedicineModal" class="modal-overlay" onclick="if(event.target===this)app.closeModal('addMedicineModal')">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white">إضافة دواء جديد</h3>
+                <button onclick="app.closeModal('addMedicineModal')" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="addMedicineForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">اسم الدواء</label>
+                        <input type="text" name="name" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">الباركود</label>
+                        <input type="text" name="barcode" class="input-field" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">الفئة</label>
+                        <select name="category" class="input-field" id="modalCategorySelect"></select>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">المورد</label>
+                        <select name="supplier" class="input-field" id="modalSupplierSelect"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">سعر البيع</label>
+                        <input type="number" name="price" step="0.01" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">سعر التكلفة</label>
+                        <input type="number" name="cost" step="0.01" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">الضريبة %</label>
+                        <input type="number" name="tax" step="0.01" value="5" class="input-field" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">المخزون</label>
+                        <input type="number" name="stock" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">الحد الأدنى</label>
+                        <input type="number" name="minStock" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="text-gray-400 text-sm block mb-2">تاريخ الانتهاء</label>
+                        <input type="date" name="expiry" class="input-field" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary w-full py-3 mt-4">حفظ الدواء</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Barcode Scanner Modal -->
+    <div id="barcodeModal" class="modal-overlay" onclick="if(event.target===this)app.closeModal('barcodeModal')">
+        <div class="modal-content text-center">
+            <div class="w-20 h-20 mx-auto bg-primary/20 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-barcode text-4xl text-primary"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">مسح الباركود</h3>
+            <p class="text-gray-400 mb-6">استخدم قارئ الباركود أو اكتب الرقم يدوياً</p>
+            <input type="text" id="barcodeInput" class="input-field text-center text-2xl font-mono tracking-widest" placeholder="0000000000000" autofocus>
+            <button onclick="processBarcode()" class="btn-primary w-full py-3 mt-4">بحث</button>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentPage = 1;
+        const perPage = 10;
+        let filteredMedicines = [];
+
+        function init() {
+            const data = getData();
+
+            // Fill category filter
+            const catSelect = document.getElementById('categoryFilter');
+            data.categories.forEach(c => {
+                catSelect.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+
+            // Fill modal selects
+            const modalCat = document.getElementById('modalCategorySelect');
+            data.categories.forEach(c => {
+                modalCat.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+            const modalSup = document.getElementById('modalSupplierSelect');
+            data.suppliers.forEach(s => {
+                modalSup.innerHTML += `<option value="${s.name}">${s.name}</option>`;
+            });
+
+            filterMedicines();
+        }
+
+        function filterMedicines() {
+            const data = getData();
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const cat = document.getElementById('categoryFilter').value;
+            const stock = document.getElementById('stockFilter').value;
+
+            filteredMedicines = data.medicines.filter(m => {
+                const matchSearch = m.name.toLowerCase().includes(search) || m.barcode.includes(search);
+                const matchCat = !cat || m.category === cat;
+                const matchStock = !stock || (stock === 'low' ? m.stock <= m.minStock : m.stock > m.minStock);
+                return matchSearch && matchCat && matchStock;
+            });
+
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('medicinesTable');
+            const start = (currentPage - 1) * perPage;
+            const end = start + perPage;
+            const pageItems = filteredMedicines.slice(start, end);
+
+            tbody.innerHTML = '';
+            pageItems.forEach((m, i) => {
+                const isLow = m.stock <= m.minStock;
+                const isExpiring = new Date(m.expiry) < new Date(Date.now() + 90 * 86400000);
+
+                tbody.innerHTML += `
+                    <tr class="animate-fade" style="animation-delay:${i * 0.05}s">
+                        <td class="text-gray-400">${m.id}</td>
+                        <td><span class="font-mono text-sm bg-white/5 px-2 py-1 rounded">${m.barcode}</span></td>
+                        <td class="text-white font-semibold">${m.name}</td>
+                        <td><span class="badge badge-info">${m.category}</span></td>
+                        <td class="text-primary font-bold">${m.price.toFixed(2)}</td>
+                        <td class="text-gray-400">${m.cost.toFixed(2)}</td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <span class="${isLow ? 'text-red-400 font-bold' : 'text-white'}">${m.stock}</span>
+                                ${isLow ? '<i class="fas fa-exclamation-triangle text-red-400 text-xs"></i>' : ''}
+                            </div>
+                        </td>
+                        <td class="text-gray-400">${m.minStock}</td>
+                        <td class="${isExpiring ? 'text-yellow-400' : 'text-gray-400'}">${m.expiry}</td>
+                        <td class="text-gray-400">${m.supplier}</td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button onclick="editMedicine(${m.id})" class="w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 flex items-center justify-center"><i class="fas fa-edit text-xs"></i></button>
+                                <button onclick="deleteMedicine(${m.id})" class="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+
+            document.getElementById('showingInfo').textContent = `عرض ${start + 1}-${Math.min(end, filteredMedicines.length)} من ${filteredMedicines.length}`;
+            document.getElementById('pageInfo').textContent = `صفحة ${currentPage} من ${Math.ceil(filteredMedicines.length / perPage)}`;
+        }
+
+        function changePage(dir) {
+            const maxPage = Math.ceil(filteredMedicines.length / perPage);
+            currentPage = Math.max(1, Math.min(maxPage, currentPage + dir));
+            renderTable();
+        }
+
+        function scanBarcode() {
+            app.openModal('barcodeModal');
+            setTimeout(() => document.getElementById('barcodeInput').focus(), 100);
+        }
+
+        function processBarcode() {
+            const code = document.getElementById('barcodeInput').value;
+            document.getElementById('searchInput').value = code;
+            filterMedicines();
+            app.closeModal('barcodeModal');
+            app.showNotification('تم البحث عن الباركود: ' + code, 'success');
+        }
+
+        document.getElementById('addMedicineForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = getData();
+            const form = new FormData(this);
+            const newMed = {
+                id: Date.now(),
+                name: form.get('name'),
+                barcode: form.get('barcode'),
+                category: form.get('category'),
+                price: parseFloat(form.get('price')),
+                cost: parseFloat(form.get('cost')),
+                stock: parseInt(form.get('stock')),
+                minStock: parseInt(form.get('minStock')),
+                expiry: form.get('expiry'),
+                supplier: form.get('supplier'),
+                tax: parseFloat(form.get('tax')) / 100
+            };
+            data.medicines.push(newMed);
+            saveData(data);
+            app.closeModal('addMedicineModal');
+            filterMedicines();
+            app.showNotification('تم إضافة الدواء بنجاح!', 'success');
+            this.reset();
+        });
+
+        function deleteMedicine(id) {
+            if (!confirm('هل أنت متأكد من حذف هذا الدواء؟')) return;
+            const data = getData();
+            data.medicines = data.medicines.filter(m => m.id !== id);
+            saveData(data);
+            filterMedicines();
+            app.showNotification('تم الحذف بنجاح', 'success');
+        }
+
+        function editMedicine(id) {
+            app.showNotification('ميزة التعديل قيد التطوير', 'info');
+        }
+
+        function exportInventory() {
+            const data = getData();
+            let csv = 'ID,Name,Barcode,Category,Price,Cost,Stock,Min Stock,Expiry,Supplier\n';
+            data.medicines.forEach(m => {
+                csv += `${m.id},"${m.name}",${m.barcode},${m.category},${m.price},${m.cost},${m.stock},${m.minStock},${m.expiry},${m.supplier}\n`;
+            });
+            const blob = new Blob([\ufeff + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'inventory_' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+            app.showNotification('تم تصدير الملف بنجاح!', 'success');
+        }
+
+        init();
+    </script>
+</body>
+</html>
